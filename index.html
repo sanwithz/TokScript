@@ -643,13 +643,18 @@
   <details class="setup" id="setup" open>
     <summary>Connect to your transcription server</summary>
     <div class="controls">
-      <label class="subtle" for="server-url">Server URL</label>
-      <input id="server-url" type="text" placeholder="http://127.0.0.1:8000" style="max-width: 250px;">
+      <label class="subtle" for="server-preset">Server</label>
+      <select id="server-preset" aria-label="Server preset selection" style="max-width: 175px;">
+        <option value="https://tokscript.onrender.com">Cloud (Render)</option>
+        <option value="http://127.0.0.1:8000">Local IP (127.0.0.1)</option>
+        <option value="custom">Custom URL</option>
+      </select>
+      <input id="server-url" type="text" placeholder="https://tokscript.onrender.com" style="max-width: 250px;" aria-label="Server URL">
       <label class="subtle" for="token">App access token</label>
       <input id="token" type="password" autocomplete="off" placeholder="Enter token (e.g. 1212312121)">
       <button class="secondary" id="connect">Connect</button>
     </div>
-    <p>This is your app’s token. Keep your Groq key in the server’s .env file. Your app token stays in this page’s memory.</p>
+    <p>Select <strong>Cloud (Render)</strong> to run 24/7 anywhere, or <strong>Local IP</strong> to connect to your computer. Keep your Groq key in the server’s .env file.</p>
   </details>
 
   <div id="status" class="status" role="status" aria-live="polite">Connect your server to begin.</div>
@@ -776,11 +781,47 @@ if (themeBtn) {
 
 // Token & Server persistence for convenience
 const savedServer = localStorage.getItem('tokscript-server-url');
-if (savedServer && $('server-url')) {
-  $('server-url').value = savedServer;
-} else if ($('server-url') && (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost' && location.protocol !== 'file:')) {
-  $('server-url').value = 'http://127.0.0.1:8000';
+const isLocalHost = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+const defaultServer = isLocalHost ? 'http://127.0.0.1:8000' : 'https://tokscript.onrender.com';
+
+if ($('server-url')) {
+  $('server-url').value = savedServer || defaultServer;
 }
+
+function syncServerPreset() {
+  if (!$('server-preset') || !$('server-url')) return;
+  const val = $('server-url').value.trim();
+  if (!val || val === 'https://tokscript.onrender.com') {
+    $('server-preset').value = 'https://tokscript.onrender.com';
+  } else if (val === 'http://127.0.0.1:8000') {
+    $('server-preset').value = 'http://127.0.0.1:8000';
+  } else {
+    $('server-preset').value = 'custom';
+  }
+}
+
+syncServerPreset();
+
+if ($('server-preset')) {
+  $('server-preset').addEventListener('change', (e) => {
+    if (e.target.value !== 'custom') {
+      $('server-url').value = e.target.value;
+      localStorage.setItem('tokscript-server-url', e.target.value);
+    } else {
+      $('server-url').focus();
+      $('server-url').select();
+    }
+    connected = false;
+  });
+}
+
+if ($('server-url')) {
+  $('server-url').addEventListener('input', () => {
+    syncServerPreset();
+    connected = false;
+  });
+}
+
 const savedToken = localStorage.getItem('tokscript-token');
 if (savedToken && !$('token').value) {
   $('token').value = savedToken;
@@ -802,7 +843,9 @@ function buttons() {
 
 async function api(path, options = {}) {
   const customServer = $('server-url') ? $('server-url').value.trim() : '';
-  const base = (customServer ? customServer.replace(/\/$/, '') : '') || ((location.protocol === 'file:' || !location.origin || location.origin === 'null') ? 'http://127.0.0.1:8000' : '');
+  const isLocalHost = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+  const fallback = isLocalHost ? 'http://127.0.0.1:8000' : 'https://tokscript.onrender.com';
+  const base = (customServer ? customServer.replace(/\/$/, '') : '') || fallback;
   const tokenVal = $('token').value.trim();
   let response;
   try {
@@ -814,13 +857,13 @@ async function api(path, options = {}) {
       }
     });
   } catch (e) {
-    throw Error(`Cannot connect to server at ${base || 'http://127.0.0.1:8000'}. Check that the server is running.`);
+    throw Error(`Cannot connect to server at ${base}. Check that the server is running.`);
   }
   let data;
   try {
     data = await response.json();
   } catch {
-    throw Error(`The server returned an unreadable response from ${base || 'http://127.0.0.1:8000'}.`);
+    throw Error(`The server returned an unreadable response from ${base}.`);
   }
   if (!response.ok) throw Error(typeof data.detail === 'string' ? data.detail : 'Check the link and language, then try again.');
   if (customServer) localStorage.setItem('tokscript-server-url', customServer);
