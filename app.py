@@ -208,6 +208,12 @@ def home():
     return FileResponse(ROOT / 'index.html')
 
 
+@app.get('/health')
+@app.get('/api/health')
+def health():
+    return {'status': 'ok', 'engine': ENGINE}
+
+
 @app.get('/api/status', dependencies=[Depends(auth)])
 @app.get('/status', dependencies=[Depends(auth)])
 def status():
@@ -323,6 +329,8 @@ def summarize(body: SummarizeInput):
 
 if __name__ == '__main__':
     import uvicorn
-    print('\nTokScript: http://127.0.0.1:8000')
+    port = int(os.getenv('PORT', 8000))
+    host = os.getenv('HOST', '0.0.0.0' if os.getenv('RENDER') or os.getenv('PORT') else '127.0.0.1')
+    print(f'\nTokScript: http://{host}:{port}')
     print('App access token (keep private): ' + TOKEN + '\n', flush=True)
-    uvicorn.run(app, host='127.0.0.1', port=8000)
+    uvicorn.run(app, host=host, port=port)

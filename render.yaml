@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: tokscript-backend
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: TRANSCRIBER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: APP_API_TOKEN
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"

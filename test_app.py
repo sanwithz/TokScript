@@ -18,6 +18,8 @@ class AppTests(unittest.TestCase):
 
     def test_auth_and_home(self):
         self.assertEqual(self.client.get('/').status_code, 200)
+        self.assertEqual(self.client.get('/health').status_code, 200)
+        self.assertEqual(self.client.get('/health').json()['status'], 'ok')
         self.assertEqual(self.client.get('/api/status').status_code, 401)
         with patch.dict(os.environ, {'GROQ_API_KEY': ''}), patch.object(app, 'ENGINE', 'groq'):
             self.assertEqual(self.client.get('/api/status', headers=self.headers).status_code, 503)

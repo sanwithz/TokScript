@@ -45,6 +45,23 @@ The key is read only by the backend. The browser token stays in page memory; ref
 
 For older Macs that cannot install current Python or FFmpeg packages, run this backend on a supported Linux machine and open its interface through an SSH tunnel. This package has not been verified on macOS Catalina.
 
+## Deploy 24/7 to Render.com (Docker)
+
+To run the backend 24/7 in the cloud without keeping your local computer on:
+
+1. Push this repository to GitHub (`sanwithz/TokScript`).
+2. Go to [Render Dashboard](https://dashboard.render.com/web/new?onboarding=active).
+3. Connect your GitHub repository **`sanwithz/TokScript`**.
+4. Render automatically detects the **`Dockerfile`** (Runtime: **Docker**).
+5. Choose Region: **Singapore** (fastest for Thailand / Asia) and Instance Type: **Free**.
+6. Under **Environment Variables**, add:
+   - `GROQ_API_KEY` = your Groq API key (`gsk_...`)
+   - `APP_API_TOKEN` = your custom app access token (e.g. `1212312121`)
+   - `TRANSCRIBER` = `groq`
+7. Click **Deploy Web Service**.
+8. Once deployed, Render will provide your public URL (e.g. `https://tokscript-backend.onrender.com`).
+9. In your frontend (e.g. [TokScript on Vercel](https://tokscript-steel.vercel.app)), paste this Render URL into **Server URL** and enter your `APP_API_TOKEN` to connect!
+
 ## No API key: local Whisper mode
 
 With the virtual environment activated:
