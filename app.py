@@ -22,8 +22,8 @@ from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / '.env')
-TOKEN = os.getenv('APP_API_TOKEN') or secrets.token_urlsafe(32)
-ENGINE = os.getenv('TRANSCRIBER', 'groq').lower()
+TOKEN = (os.getenv('APP_API_TOKEN') or '').strip() or secrets.token_urlsafe(32)
+ENGINE = (os.getenv('TRANSCRIBER') or 'groq').strip().lower()
 MAX_BYTES = 100 * 1024 * 1024
 MAX_SECONDS = 900
 app = FastAPI(title='TokScript API', version='1.0.0')
@@ -39,8 +39,8 @@ app.add_middleware(
 
 
 def auth(request: Request):
-    supplied = request.headers.get('authorization', '')
-    groq_key = os.getenv('GROQ_API_KEY', '')
+    supplied = request.headers.get('authorization', '').strip()
+    groq_key = (os.getenv('GROQ_API_KEY') or '').strip()
     supplied_bytes = supplied.encode()
     is_app_token = secrets.compare_digest(supplied_bytes, ('Bearer ' + TOKEN).encode())
     is_groq_token = bool(groq_key) and secrets.compare_digest(supplied_bytes, ('Bearer ' + groq_key).encode())
