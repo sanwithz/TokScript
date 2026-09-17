@@ -203,17 +203,20 @@ class URLInput(BaseModel):
 
 
 @app.get('/')
+@app.get('/index.html')
 def home():
     return FileResponse(ROOT / 'index.html')
 
 
 @app.get('/api/status', dependencies=[Depends(auth)])
+@app.get('/status', dependencies=[Depends(auth)])
 def status():
     ready()
     return {'ready': True, 'engine': ENGINE, 'max_minutes': MAX_SECONDS // 60}
 
 
 @app.post('/api/transcribe', dependencies=[Depends(auth)])
+@app.post('/transcribe', dependencies=[Depends(auth)])
 async def url_transcription(body: URLInput):
     ready()
     validate_url(body.url)
@@ -233,6 +236,7 @@ async def url_transcription(body: URLInput):
 
 
 @app.post('/api/transcribe-file', dependencies=[Depends(auth)])
+@app.post('/transcribe-file', dependencies=[Depends(auth)])
 async def file_transcription(request: Request, language: str = 'auto'):
     ready()
     if not re.fullmatch(r'auto|[a-z]{2}', language):
@@ -267,6 +271,7 @@ class SummarizeInput(BaseModel):
 
 
 @app.post('/api/summarize', dependencies=[Depends(auth)])
+@app.post('/summarize', dependencies=[Depends(auth)])
 def summarize(body: SummarizeInput):
     groq_key = os.getenv('GROQ_API_KEY')
     if not groq_key:
